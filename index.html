@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radyo Dinle</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="images/Radyo.png">
+    <link rel="apple-touch-icon" href="images/Radyo.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="manifest" href="manifest.json">
+    <style>
+        :root {
+            --primary: #6366f1; --accent: #f43f5e; --bg: #f8fafc;
+            --sidebar-bg: #ffffff; --card-bg: #ffffff;
+            --text: #1e293b; --text-dim: #64748b;
+            --glass: rgba(255, 255, 255, 0.8);
+            --fav-color: #fbbf24;
+        }
+        [data-theme="dark"] {
+            --bg: #0f172a; --sidebar-bg: #1e293b; --card-bg: #1e293b;
+            --text: #f8fafc; --text-dim: #94a3b8;
+            --glass: rgba(30, 41, 59, 0.8);
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; transition: 0.3s; }
+        
+        .sidebar { width: 380px; background-color: var(--sidebar-bg); display: flex; flex-direction: column; border-right: 1px solid rgba(0,0,0,0.05); z-index: 10; }
+        .sidebar-header { padding: 24px; }
+        .sidebar-header h2 { margin: 0 0 15px 0; font-size: 1.5rem; color: var(--primary); }
+        
+        .search-container { position: relative; margin-bottom: 10px; }
+        .search-box { width: 100%; padding: 12px 15px 12px 40px; border-radius: 12px; border: 2px solid transparent; background: var(--bg); color: var(--text); outline: none; }
+        .search-box:focus { border-color: var(--primary); }
+        .search-container i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-dim); }
+
+        .radio-list { flex: 1; overflow-y: auto; padding: 10px; }
+        .radio-item { display: flex; align-items: center; padding: 12px; margin-bottom: 8px; border-radius: 12px; cursor: pointer; transition: 0.2s; position: relative; }
+        .radio-item:hover { background: var(--bg); }
+        .radio-item.active { background: var(--primary); color: white; }
+        .radio-item img { width: 45px; height: 45px; border-radius: 8px; margin-right: 15px; object-fit: cover; }
+        .fav-star-item { margin-left: auto; color: var(--fav-color); font-size: 0.9rem; }
+
+        .main-content { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle at top right, var(--primary), transparent 40%), radial-gradient(circle at bottom left, var(--accent), transparent 40%); position: relative; }
+        .player-card { background: var(--glass); backdrop-filter: blur(10px); padding: 40px; border-radius: 32px; text-align: center; width: 90%; max-width: 400px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.2); }
+        
+        .radio-art-container { position: relative; width: 180px; height: 180px; margin: 0 auto 20px; }
+        .radio-art-container img { width: 100%; height: 100%; border-radius: 20px; object-fit: cover; }
+        
+        .fav-btn { position: absolute; top: 10px; right: 10px; background: white; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; color: #ccc; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: 0.2s; }
+        .fav-btn.is-fav { color: var(--fav-color); }
+        
+        .playing-animation { display: none; position: absolute; bottom: -5px; right: -5px; background: var(--accent); width: 40px; height: 40px; border-radius: 50%; align-items: center; justify-content: center; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+
+        audio { width: 100%; margin-top: 20px; }
+        .theme-toggle { position: absolute; top: 20px; right: 20px; width: 45px; height: 45px; border-radius: 12px; border: none; background: var(--glass); cursor: pointer; color: var(--text); }
+        
+        .mobile-nav { display: none; position: fixed; bottom: 0; width: 100%; background: var(--sidebar-bg); padding: 15px; border-top: 1px solid rgba(0,0,0,0.05); justify-content: space-around; z-index: 100; }
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; width: 100%; height: calc(100% - 50px); transform: translateX(-100%); transition: 0.3s; }
+            .sidebar.show { transform: translateX(0); }
+            .mobile-nav { display: flex; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <h2>Keşfet</h2>
+        <div class="search-container">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="searchInput" class="search-box" placeholder="Radyo ara..." onkeyup="filterRadios()">
+        </div>
+    </div>
+    <div id="radioList" class="radio-list"></div>
+</div>
+
+<div class="main-content">
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn"><i class="fa-solid fa-sun"></i></button>
+    <div class="player-card">
+        <div class="radio-art-container">
+            <button class="fav-btn" id="favBtn" onclick="toggleFavorite()"><i class="fa-solid fa-star"></i></button>
+            <img id="radioImg" src="images/Radyo.png" alt="Logo">
+            <div class="playing-animation" id="playAnim"><i class="fa-solid fa-volume-high" style="color: white;"></i></div>
+        </div>
+        <h2 id="radioTitle" style="margin: 0;">Radyo Seçin</h2>
+        <p id="statusText" style="color: var(--text-dim); font-size: 0.9rem; margin: 10px 0 20px;">Dinlemek için bir radyo seçin</p>
+        <audio id="radioPlayer" controls></audio>
+    </div>
+</div>
+
+<nav class="mobile-nav">
+    <div onclick="toggleMobileView('list')"><i class="fa-solid fa-list fa-xl"></i></div>
+    <div onclick="toggleMobileView('player')"><i class="fa-solid fa-play fa-xl"></i></div>
+</nav>
+
+<script>
+    const radioStations = [
+        { id: 1, name: "Köroğlu FM", logo: "images/KorogluFM.jpg", url: "https://yayin.turkhosted.com/6068/stream" },
+        { id: 2, name: "Türkiyem FM", logo: "images/TurkiyemFM.png", url: "https://server7.streamserver24.com/proxy/turkiyemfm?mp=/stream" },
+        { id: 3, name: "Radyo Sinerji (Tokat)", logo: "images/RadyoSinerji.jpg", url: "https://radio.guventechnology.com/9994/stream" },
+        { id: 4, name: "Ada FM (Sakarya)", logo: "images/AdaFM.png", url: "https://yayin.webfirmam.com/adafm.mp3" },
+        { id: 5, name: "Radyo Türkü", logo: "images/RadyoTurku.jpg", url: "https://yayin.turkhosted.com/4591/stream" },
+        { id: 6, name: "Radyo 35", logo: "images/Radyo35.png", url: "https://yayin.turkhosted.com/6012/stream" },
+        { id: 7, name: "Mavi Radyo (Elazığ)", logo: "images/MaviRadyo.jpg", url: "https://yayin.turkhosted.com/6066/stream" },
+        { id: 8, name: "Esas Radyo (Konya)", logo: "images/EsasRadyo.png", url: "https://yayin.turkhosted.com/6034/stream" },
+        { id: 9, name: "Radyo Ekin", logo: "images/RadyoEkin.jpg", url: "https://yayin.turkhosted.com/6006/stream" },
+        { id: 10, name: "Radyo 42", logo: "images/Radyo42.jpg", url: "https://a8.asurahosting.com/hls/radyo_42_fm_medya_konya_pr_music/live.m3u8" },
+        { id: 11, name: "Erzincan Nostalji", logo: "images/ErzincanNostalji.jpg", url: "https://erzincannostalji.ozelip.com/8238/stream" },
+        { id: 12, name: "Radyo Kocatepe", logo: "images/RadyoKocatepe.png", url: "https://radyo.aku.edu.tr/radyo" },
+        { id: 13, name: "Radyo A (Anadolu Üniversitesi)", logo: "images/RadyoA.png", url: "https://canli-radyoa.anadolu.edu.tr/Radyo_A_MP3" },
+        { id: 14, name: "Radyo FBÜ", logo: "images/RadyoFBU.png", url: "https://stream.fbu.edu.tr/stream" },
+        { id: 15, name: "TRT Radyo 1", logo: "images/TRTRadyo1.png", url: "https://rd-trtradyo1.medya.trt.com.tr/master.m3u8" },
+        { id: 16, name: "TRT Memleketim FM", logo: "images/TRTMemleketimFM.png", url: "https://radio-trtmemleketimfm.medya.trt.com.tr/master.m3u8" },
+        { id: 17, name: "TRT Antalya", logo: "images/TRTAntalya.png", url: "https://radio-trtantalya.medya.trt.com.tr/master.m3u8" },
+        { id: 18, name: "TRT Çukurova", logo: "images/TRTCukurova.png", url: "https://radio-trtcukurova.medya.trt.com.tr/master.m3u8" },
+        { id: 19, name: "TRT Erzurum", logo: "images/TRTErzurum.png", url: "https://radio-trterzurum.medya.trt.com.tr/master.m3u8" },
+        { id: 20, name: "TRT GAP Diyarbakır", logo: "images/TRTGAPDiyarbakir.png", url: "https://radio-trtgap.medya.trt.com.tr/master.m3u8" },
+        { id: 21, name: "TRT Trabzon", logo: "images/TRTTrabzon.png", url: "https://radio-trttrabzon.medya.trt.com.tr/master.m3u8" },
+        { id: 22, name: "TRT TSR", logo: "images/TRTTSR.png", url: "https://radio-trttsr.medya.trt.com.tr/master.m3u8" },
+        { id: 23, name: "TRT Nağme", logo: "images/TRTNagme.png", url: "https://rd-trtnagme.medya.trt.com.tr/master.m3u8" },
+        { id: 24, name: "REPLAY NEWS - Türkçe (Haber radyosu - her 5 dakikada!)", logo: "images/ReplayNews.png", url: "https://replaynewstr.ice.infomaniak.ch/replaynewstr-128.mp3" },
+        { id: 25, name: "Alparslan FM (-! Kontrol edilecek !-)", logo: "images/Radyo.png", url: "https://ssl123.ozelip.com/8022/stream" },
+        { id: 26, name: "Azadi FM (Kürtçe)", logo: "images/Radyo.png", url: "https://amed.ozelip.com/8040/stream" },
+        { id: 27, name: "Loops Radio Techno", logo: "images/Radyo.png", url: "https://ip179.ozelip.com/7688/stream/" },
+        { id: 28, name: "Loops Radio", logo: "images/Radyo.png", url: "https://progressive.ozelip.com/7670/stream" },
+        { id: 29, name: "Loops Radio House Station", logo: "images/Radyo.png", url: "https://loopsdeep.ozelip.com/7806/stream" },
+        { id: 30, name: "Loops Radio Elektronica Station", logo: "images/Radyo.png", url: "https://ssl22.radyotelekom.com/8232/stream" },
+        { id: 31, name: "Radyo Hidayet Çağı", logo: "images/MihrVakfi.jpg", url: "https://radio.mihr.com/radio/8000/radio.mp3" },
+        { id: 32, name: "Radyo Hakkın Sesi", logo: "images/MihrVakfi.jpg", url: "https://radio.mihr.com/radio/8010/hakkinsesi" },
+        { id: 33, name: "Her An Kur'an Her An Mutluluk", logo: "images/MihrVakfi.jpg", url: "https://radio.mihr.com/radio/8050/radio.mp3" },
+        { id: 34, name: "Semerkand Radyo", logo: "images/SemerkandRadyo.jpg", url: "http://mtisvwurbfcyslive.mediatriple.net/mtisvwurbfcyslive/broadcast_58e23cb112296.smil/playlist.m3u8" }
+    ];
+
+    let favorites = JSON.parse(localStorage.getItem('radio-favs')) || [];
+    let currentStation = null;
+    let hls = new Hls();
+
+    const elements = {
+        list: document.getElementById('radioList'),
+        img: document.getElementById('radioImg'),
+        title: document.getElementById('radioTitle'),
+        player: document.getElementById('radioPlayer'),
+        favBtn: document.getElementById('favBtn'),
+        status: document.getElementById('statusText'),
+        anim: document.getElementById('playAnim')
+    };
+
+    function renderList(stations = radioStations) {
+        elements.list.innerHTML = '';
+        // Önce favorileri göster
+        const sorted = [...stations].sort((a, b) => favorites.includes(b.id) - favorites.includes(a.id));
+        
+        sorted.forEach((radio) => {
+            const isFav = favorites.includes(radio.id);
+            const item = document.createElement('div');
+            item.className = `radio-item ${currentStation?.id === radio.id ? 'active' : ''}`;
+            item.innerHTML = `
+                <img src="${radio.logo}" onerror="this.src='images/Radyo.png'">
+                <span>${radio.name}</span>
+                ${isFav ? '<i class="fa-solid fa-star fav-star-item"></i>' : ''}
+            `;
+            item.onclick = () => {
+                playRadio(radio);
+                if(window.innerWidth <= 768) toggleMobileView('player');
+            };
+            elements.list.appendChild(item);
+        });
+    }
+
+    function playRadio(radio) {
+        currentStation = radio;
+        elements.title.innerText = radio.name;
+        elements.img.src = radio.logo;
+        updateFavBtnUI();
+        
+        elements.status.innerText = "Yükleniyor...";
+        if (radio.url.includes('.m3u8')) {
+            hls.destroy(); hls = new Hls();
+            hls.loadSource(radio.url); hls.attachMedia(elements.player);
+            hls.on(Hls.Events.MANIFEST_PARSED, () => elements.player.play());
+        } else {
+            hls.destroy(); elements.player.src = radio.url; elements.player.play();
+        }
+        renderList();
+    }
+
+    function toggleFavorite() {
+        if (!currentStation) return;
+        const index = favorites.indexOf(currentStation.id);
+        if (index > -1) favorites.splice(index, 1);
+        else favorites.push(currentStation.id);
+        
+        localStorage.setItem('radio-favs', JSON.stringify(favorites));
+        updateFavBtnUI();
+        renderList();
+    }
+
+    function updateFavBtnUI() {
+        if (currentStation && favorites.includes(currentStation.id)) {
+            elements.favBtn.classList.add('is-fav');
+        } else {
+            elements.favBtn.classList.remove('is-fav');
+        }
+    }
+
+    function filterRadios() {
+        const term = document.getElementById('searchInput').value.toLowerCase();
+        const filtered = radioStations.filter(r => r.name.toLowerCase().includes(term));
+        renderList(filtered);
+    }
+
+    // Audio Events
+    elements.player.onplay = () => { elements.anim.style.display = "flex"; elements.status.innerText = "Canlı Yayın"; };
+    elements.player.onpause = () => { elements.anim.style.display = "none"; elements.status.innerText = "Durduruldu"; };
+
+    function toggleTheme() {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const target = isDark ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', target);
+        document.getElementById('themeBtn').innerHTML = target === 'dark' ? '<i class="fa-solid fa-moon"></i>' : '<i class="fa-solid fa-sun"></i>';
+        localStorage.setItem('radio-theme', target);
+    }
+
+    function toggleMobileView(v) { document.getElementById('sidebar').classList.toggle('show', v === 'list'); }
+
+    // Init
+    renderList();
+    const savedTheme = localStorage.getItem('radio-theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    if(savedTheme === 'dark') document.getElementById('themeBtn').innerHTML = '<i class="fa-solid fa-moon"></i>';
+
+    document.addEventListener('contextmenu', event => event.preventDefault());
+
+
+    document.onkeydown = function(e) {
+      if (e.ctrlKey && (e.keyCode === 67 || e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 85)) {
+        return false;
+      }
+      if (e.keyCode === 123) { // F12
+        return false;
+      }
+};
+
+
+</script>
+</body>
+</html>
