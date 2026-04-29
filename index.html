@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="manifest" href="manifest.json">
     <style>
@@ -102,42 +102,28 @@
 </nav>
 
 <script>
-    const radioStations = [
-        { id: 1, name: "Köroğlu FM", logo: "images/KorogluFM.jpg", url: "https://yayin.turkhosted.com/6068/stream" },
-        { id: 2, name: "Türkiyem FM", logo: "images/TurkiyemFM.png", url: "https://server7.streamserver24.com/proxy/turkiyemfm?mp=/stream" },
-        { id: 3, name: "Radyo Sinerji (Tokat)", logo: "images/RadyoSinerji.jpg", url: "https://radio.guventechnology.com/9994/stream" },
-        { id: 4, name: "Ada FM (Sakarya)", logo: "images/AdaFM.png", url: "https://yayin.webfirmam.com/adafm.mp3" },
-        { id: 5, name: "Radyo Türkü", logo: "images/RadyoTurku.jpg", url: "https://yayin.turkhosted.com/4591/stream" },
-        { id: 6, name: "Radyo 35", logo: "images/Radyo35.png", url: "https://yayin.turkhosted.com/6012/stream" },
-        { id: 7, name: "Mavi Radyo (Elazığ)", logo: "images/MaviRadyo.jpg", url: "https://yayin.turkhosted.com/6066/stream" },
-        { id: 8, name: "Esas Radyo (Konya)", logo: "images/EsasRadyo.png", url: "https://yayin.turkhosted.com/6034/stream" },
-        { id: 9, name: "Radyo Ekin", logo: "images/RadyoEkin.jpg", url: "https://yayin.turkhosted.com/6006/stream" },
-        { id: 10, name: "Radyo 42", logo: "images/Radyo42.jpg", url: "https://a8.asurahosting.com/hls/radyo_42_fm_medya_konya_pr_music/live.m3u8" },
-        { id: 11, name: "Erzincan Nostalji", logo: "images/ErzincanNostalji.jpg", url: "https://erzincannostalji.ozelip.com/8238/stream" },
-        { id: 12, name: "Radyo Kocatepe", logo: "images/RadyoKocatepe.png", url: "https://radyo.aku.edu.tr/radyo" },
-        { id: 13, name: "Radyo A (Anadolu Üniversitesi)", logo: "images/RadyoA.png", url: "https://canli-radyoa.anadolu.edu.tr/Radyo_A_MP3" },
-        { id: 14, name: "Radyo FBÜ", logo: "images/RadyoFBU.png", url: "https://stream.fbu.edu.tr/stream" },
-        { id: 15, name: "TRT Radyo 1", logo: "images/TRTRadyo1.png", url: "https://rd-trtradyo1.medya.trt.com.tr/master.m3u8" },
-        { id: 16, name: "TRT Memleketim FM", logo: "images/TRTMemleketimFM.png", url: "https://radio-trtmemleketimfm.medya.trt.com.tr/master.m3u8" },
-        { id: 17, name: "TRT Antalya", logo: "images/TRTAntalya.png", url: "https://radio-trtantalya.medya.trt.com.tr/master.m3u8" },
-        { id: 18, name: "TRT Çukurova", logo: "images/TRTCukurova.png", url: "https://radio-trtcukurova.medya.trt.com.tr/master.m3u8" },
-        { id: 19, name: "TRT Erzurum", logo: "images/TRTErzurum.png", url: "https://radio-trterzurum.medya.trt.com.tr/master.m3u8" },
-        { id: 20, name: "TRT GAP Diyarbakır", logo: "images/TRTGAPDiyarbakir.png", url: "https://radio-trtgap.medya.trt.com.tr/master.m3u8" },
-        { id: 21, name: "TRT Trabzon", logo: "images/TRTTrabzon.png", url: "https://radio-trttrabzon.medya.trt.com.tr/master.m3u8" },
-        { id: 22, name: "TRT TSR", logo: "images/TRTTSR.png", url: "https://radio-trttsr.medya.trt.com.tr/master.m3u8" },
-        { id: 23, name: "TRT Nağme", logo: "images/TRTNagme.png", url: "https://rd-trtnagme.medya.trt.com.tr/master.m3u8" },
-        { id: 24, name: "REPLAY NEWS - Türkçe (Haber radyosu - her 5 dakikada!)", logo: "images/ReplayNews.png", url: "https://replaynewstr.ice.infomaniak.ch/replaynewstr-128.mp3" },
-        { id: 25, name: "Alparslan FM (-! Kontrol edilecek !-)", logo: "images/Radyo.png", url: "https://ssl123.ozelip.com/8022/stream" },
-        { id: 26, name: "Azadi FM (Kürtçe)", logo: "images/Radyo.png", url: "https://amed.ozelip.com/8040/stream" },
-        { id: 27, name: "Loops Radio Techno", logo: "images/Radyo.png", url: "https://ip179.ozelip.com/7688/stream/" },
-        { id: 28, name: "Loops Radio", logo: "images/Radyo.png", url: "https://progressive.ozelip.com/7670/stream" },
-        { id: 29, name: "Loops Radio House Station", logo: "images/Radyo.png", url: "https://loopsdeep.ozelip.com/7806/stream" },
-        { id: 30, name: "Loops Radio Elektronica Station", logo: "images/Radyo.png", url: "https://ssl22.radyotelekom.com/8232/stream" },
-        { id: 31, name: "Radyo Hidayet Çağı", logo: "images/MihrVakfi.jpg", url: "https://radio.mihr.com/radio/8000/radio.mp3" },
-        { id: 32, name: "Radyo Hakkın Sesi", logo: "images/MihrVakfi.jpg", url: "https://radio.mihr.com/radio/8010/hakkinsesi" },
-        { id: 33, name: "Her An Kur'an Her An Mutluluk", logo: "images/MihrVakfi.jpg", url: "https://radio.mihr.com/radio/8050/radio.mp3" },
-        { id: 34, name: "Semerkand Radyo", logo: "images/SemerkandRadyo.jpg", url: "http://mtisvwurbfcyslive.mediatriple.net/mtisvwurbfcyslive/broadcast_58e23cb112296.smil/playlist.m3u8" }
-    ];
+    let radioStations = []; // Başlangıçta boş
+    let currentIndex = 0;
+
+    // JSON'dan verileri çek
+    async function loadRadios() {
+        try {
+            const response = await fetch('radios.json');
+            radioStations = await response.json();
+        
+            // Veriler yüklendikten sonra ilk radyoyu başlat
+            if (radioStations.length > 0) {
+                updateRadio(0);
+            }
+        } catch (error) {
+            console.error("Radyo listesi yüklenemedi:", error);
+            radioTitle.innerText = "Liste yüklenemedi!";
+        }
+    }
+
+// Sayfa yüklendiğinde başlat
+loadRadios();
+
 
     let favorites = JSON.parse(localStorage.getItem('radio-favs')) || [];
     let currentStation = null;
