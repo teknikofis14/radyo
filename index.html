@@ -52,18 +52,18 @@
         .radio-art-container { position: relative; width: 180px; height: 180px; margin: 0 auto 20px; }
         .radio-art-container img { width: 100%; height: 100%; border-radius: 20px; object-fit: cover; }
         
-        .fav-btn { position: absolute; top: 10px; right: 10px; background: white; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; color: #ccc; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: 0.2s; }
+        .fav-btn { position: absolute; top: 10px; right: 10px; background: white; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; color: #ccc; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: 0.2s; display: flex; align-items: center; justify-content: center; }
         .fav-btn.is-fav { color: var(--fav-color); }
         
         .playing-animation { display: none; position: absolute; bottom: -5px; right: -5px; background: var(--accent); width: 40px; height: 40px; border-radius: 50%; align-items: center; justify-content: center; animation: pulse 2s infinite; }
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
 
         audio { width: 100%; margin-top: 20px; }
-        .theme-toggle { position: absolute; top: 20px; right: 20px; width: 45px; height: 45px; border-radius: 12px; border: none; background: var(--glass); cursor: pointer; color: var(--text); }
+        .theme-toggle { position: absolute; top: 20px; right: 20px; width: 45px; height: 45px; border-radius: 12px; border: none; background: var(--glass); cursor: pointer; color: var(--text); display: flex; align-items: center; justify-content: center; }
         
         .mobile-nav { display: none; position: fixed; bottom: 0; width: 100%; background: var(--sidebar-bg); padding: 15px; border-top: 1px solid rgba(0,0,0,0.05); justify-content: space-around; z-index: 100; }
         @media (max-width: 768px) {
-            .sidebar { position: fixed; width: 100%; height: calc(100% - 50px); transform: translateX(-100%); transition: 0.3s; }
+            .sidebar { position: fixed; width: 100%; height: calc(100% - 70px); transform: translateX(-100%); transition: 0.3s; }
             .sidebar.show { transform: translateX(0); }
             .mobile-nav { display: flex; }
         }
@@ -73,10 +73,10 @@
 
 <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
-        <h2>Keşfet</h2>
+        <h2>Radyo Dinle</h2>
         <div class="search-container">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="searchInput" class="search-box" placeholder="Radyo ara..." onkeyup="filterRadios()">
+            <input type="text" id="searchInput" class="search-box" placeholder="Kanal ara..." onkeyup="filterRadios()">
         </div>
     </div>
     <div id="radioList" class="radio-list"></div>
@@ -91,14 +91,14 @@
             <div class="playing-animation" id="playAnim"><i class="fa-solid fa-volume-high" style="color: white;"></i></div>
         </div>
         <h2 id="radioTitle" style="margin: 0;">Radyo Seçin</h2>
-        <p id="statusText" style="color: var(--text-dim); font-size: 0.9rem; margin: 10px 0 20px;">Dinlemek için bir radyo seçin</p>
+        <p id="statusText" style="color: var(--text-dim); font-size: 0.9rem; margin: 10px 0 20px;">Bağlanıyor...</p>
         <audio id="radioPlayer" controls></audio>
     </div>
 </div>
 
 <nav class="mobile-nav">
-    <div onclick="toggleMobileView('list')"><i class="fa-solid fa-list fa-xl"></i></div>
     <div onclick="toggleMobileView('player')"><i class="fa-solid fa-play fa-xl"></i></div>
+    <div onclick="toggleMobileView('list')"><i class="fa-solid fa-list fa-xl"></i></div>
 </nav>
 
 <script>
@@ -114,9 +114,11 @@
         player: document.getElementById('radioPlayer'),
         favBtn: document.getElementById('favBtn'),
         status: document.getElementById('statusText'),
-        anim: document.getElementById('playAnim')
+        anim: document.getElementById('playAnim'),
+        searchInput: document.getElementById('searchInput')
     };
 
+    // 1. JSON Verisini Çekme
     async function fetchRadios() {
         try {
             elements.status.innerText = "Kanallar yükleniyor...";
@@ -134,12 +136,16 @@
     function renderList(stations = radioStations) {
         elements.list.innerHTML = '';
         if (stations.length === 0) {
-            elements.list.innerHTML = '<div style="padding:20px; color:var(--text-dim)">Liste yüklenemedi.</div>';
-            document.getElementById('radioTitle').innerHTML = 'Liste yüklenemedi';
+            elements.list.innerHTML = '<div style="padding:20px; color:var(--text-dim)">Kanal bulunamadı.</div>';
             return;
         }
+
         // Önce favorileri göster
-        const sorted = [...stations].sort((a, b) => favorites.includes(b.id) - favorites.includes(a.id));
+        const sorted = [...stations].sort((a, b) => {
+            const aFav = favorites.includes(a.id);
+            const bFav = favorites.includes(b.id);
+            return bFav - aFav;
+        });
         
         sorted.forEach((radio) => {
             const isFav = favorites.includes(radio.id);
@@ -150,10 +156,7 @@
                 <span>${radio.name}</span>
                 ${isFav ? '<i class="fa-solid fa-star fav-star-item"></i>' : ''}
             `;
-            item.onclick = () => {
-                playRadio(radio);
-                if(window.innerWidth <= 768) toggleMobileView('player');
-            };
+            item.onclick = () => playRadio(radio);
             elements.list.appendChild(item);
         });
     }
@@ -164,15 +167,19 @@
         elements.img.src = radio.logo;
         updateFavBtnUI();
         
-        elements.status.innerText = "Yükleniyor...";
+        elements.status.innerText = "Bağlanıyor...";
+        
         if (radio.url.includes('.m3u8')) {
             hls.destroy(); hls = new Hls();
             hls.loadSource(radio.url); hls.attachMedia(elements.player);
             hls.on(Hls.Events.MANIFEST_PARSED, () => elements.player.play());
         } else {
-            hls.destroy(); elements.player.src = radio.url; elements.player.play();
+            hls.destroy(); 
+            elements.player.src = radio.url; 
+            elements.player.play().catch(e => elements.status.innerText = "Yayın açılamadı.");
         }
         renderList();
+        if(window.innerWidth <= 768) toggleMobileView('player');
     }
 
     function toggleFavorite() {
@@ -195,7 +202,7 @@
     }
 
     function filterRadios() {
-        const term = document.getElementById('searchInput').value.toLowerCase();
+        const term = elements.searchInput.value.toLowerCase();
         const filtered = radioStations.filter(r => r.name.toLowerCase().includes(term));
         renderList(filtered);
     }
@@ -205,34 +212,19 @@
     elements.player.onpause = () => { elements.anim.style.display = "none"; elements.status.innerText = "Durduruldu"; };
 
     function toggleTheme() {
-        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        const target = isDark ? 'light' : 'dark';
+        const target = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', target);
-        document.getElementById('themeBtn').innerHTML = target === 'dark' ? '<i class="fa-solid fa-moon"></i>' : '<i class="fa-solid fa-sun"></i>';
         localStorage.setItem('radio-theme', target);
+        document.getElementById('themeBtn').innerHTML = target === 'dark' ? '<i class="fa-solid fa-moon"></i>' : '<i class="fa-solid fa-sun"></i>';
     }
 
     function toggleMobileView(v) { document.getElementById('sidebar').classList.toggle('show', v === 'list'); }
 
-    // Init
-    renderList();
+    // Başlangıç
+    fetchRadios();
     const savedTheme = localStorage.getItem('radio-theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
     if(savedTheme === 'dark') document.getElementById('themeBtn').innerHTML = '<i class="fa-solid fa-moon"></i>';
-
-    document.addEventListener('contextmenu', event => event.preventDefault());
-
-
-    document.onkeydown = function(e) {
-      if (e.ctrlKey && (e.keyCode === 67 || e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 85)) {
-        return false;
-      }
-      if (e.keyCode === 123) { // F12
-        return false;
-      }
-};
-
-
 </script>
 </body>
 </html>
