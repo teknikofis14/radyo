@@ -102,29 +102,7 @@
 </nav>
 
 <script>
-    let radioStations = []; // Başlangıçta boş
-    let currentIndex = 0;
-
-    // JSON'dan verileri çek
-    async function loadRadios() {
-        try {
-            const response = await fetch('radios.json');
-            radioStations = await response.json();
-        
-            // Veriler yüklendikten sonra ilk radyoyu başlat
-            if (radioStations.length > 0) {
-                updateRadio(0);
-            }
-        } catch (error) {
-            console.error("Radyo listesi yüklenemedi:", error);
-            radioTitle.innerText = "Liste yüklenemedi!";
-        }
-    }
-
-// Sayfa yüklendiğinde başlat
-loadRadios();
-
-
+    let radioStations = []; // JSON'dan gelecek
     let favorites = JSON.parse(localStorage.getItem('radio-favs')) || [];
     let currentStation = null;
     let hls = new Hls();
@@ -139,8 +117,27 @@ loadRadios();
         anim: document.getElementById('playAnim')
     };
 
+    async function fetchRadios() {
+        try {
+            elements.status.innerText = "Kanallar yükleniyor...";
+            const response = await fetch('radios.json');
+            if (!response.ok) throw new Error('JSON yüklenemedi');
+            radioStations = await response.json();
+            renderList();
+            elements.status.innerText = "Bir kanal seçin";
+        } catch (error) {
+            console.error('Hata:', error);
+            elements.status.innerText = "Liste yüklenemedi!";
+        }
+    }
+
     function renderList(stations = radioStations) {
         elements.list.innerHTML = '';
+        if (stations.length === 0) {
+            elements.list.innerHTML = '<div style="padding:20px; color:var(--text-dim)">Liste yüklenemedi.</div>';
+            document.getElementById('radioTitle').innerHTML = 'Liste yüklenemedi';
+            return;
+        }
         // Önce favorileri göster
         const sorted = [...stations].sort((a, b) => favorites.includes(b.id) - favorites.includes(a.id));
         
