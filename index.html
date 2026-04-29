@@ -91,7 +91,7 @@
             <div class="playing-animation" id="playAnim"><i class="fa-solid fa-volume-high" style="color: white;"></i></div>
         </div>
         <h2 id="radioTitle" style="margin: 0;">Radyo Seçin</h2>
-        <p id="statusText" style="color: var(--text-dim); font-size: 0.9rem; margin: 10px 0 20px;">Bağlanıyor...</p>
+        <p id="statusText" style="color: var(--text-dim); font-size: 0.9rem; margin: 10px 0 20px;">Başlatılıyor...</p>
         <audio id="radioPlayer" controls></audio>
     </div>
 </div>
@@ -102,7 +102,7 @@
 </nav>
 
 <script>
-    let radioStations = []; // JSON'dan gelecek
+    let radioStations = [];
     let favorites = JSON.parse(localStorage.getItem('radio-favs')) || [];
     let currentStation = null;
     let hls = new Hls();
@@ -118,34 +118,35 @@
         searchInput: document.getElementById('searchInput')
     };
 
-    // 1. JSON Verisini Çekme
+    // JSON Verisini Çekme (Daha Güçlü Versiyon)
     async function fetchRadios() {
         try {
-            elements.status.innerText = "Kanallar yükleniyor...";
-            const response = await fetch('radios.json');
-            if (!response.ok) throw new Error('JSON yüklenemedi');
+            elements.status.innerText = "Liste çekiliyor...";
+            // v=Date.now() ekleyerek sunucudaki önbelleği atlatıyoruz
+            const response = await fetch('radios.json?v=' + Date.now());
+            
+            if (!response.ok) {
+                throw new Error(`Dosya bulunamadı: ${response.status}`);
+            }
+            
             radioStations = await response.json();
+            console.log("Radyo listesi başarıyla yüklendi:", radioStations);
+            
             renderList();
             elements.status.innerText = "Bir kanal seçin";
         } catch (error) {
-            console.error('Hata:', error);
-            elements.status.innerText = "Liste yüklenemedi!";
+            console.error('JSON Hatası:', error);
+            elements.status.innerHTML = `<span style="color:red">Hata: ${error.message}</span>`;
+            // Liste yüklenemezse yedek olarak boş liste göster
+            elements.list.innerHTML = '<div style="padding:20px;">radios.json dosyası okunamadı. Lütfen dosya adını ve içeriğini kontrol edin.</div>';
         }
     }
 
     function renderList(stations = radioStations) {
         elements.list.innerHTML = '';
-        if (stations.length === 0) {
-            elements.list.innerHTML = '<div style="padding:20px; color:var(--text-dim)">Kanal bulunamadı.</div>';
-            return;
-        }
+        if (!stations || stations.length === 0) return;
 
-        // Önce favorileri göster
-        const sorted = [...stations].sort((a, b) => {
-            const aFav = favorites.includes(a.id);
-            const bFav = favorites.includes(b.id);
-            return bFav - aFav;
-        });
+        const sorted = [...stations].sort((a, b) => favorites.includes(b.id) - favorites.includes(a.id));
         
         sorted.forEach((radio) => {
             const isFav = favorites.includes(radio.id);
@@ -176,7 +177,7 @@
         } else {
             hls.destroy(); 
             elements.player.src = radio.url; 
-            elements.player.play().catch(e => elements.status.innerText = "Yayın açılamadı.");
+            elements.player.play().catch(e => elements.status.innerText = "Yayın başlatılamadı.");
         }
         renderList();
         if(window.innerWidth <= 768) toggleMobileView('player');
@@ -207,7 +208,6 @@
         renderList(filtered);
     }
 
-    // Audio Events
     elements.player.onplay = () => { elements.anim.style.display = "flex"; elements.status.innerText = "Canlı Yayın"; };
     elements.player.onpause = () => { elements.anim.style.display = "none"; elements.status.innerText = "Durduruldu"; };
 
