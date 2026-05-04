@@ -1,2 +1,2 @@
 # radyo
-Adalet ağında çalışan radyoları dinleyebileceğiniz internet sitesi
+Radyo dinleyebileceğiniz internet sitesi
