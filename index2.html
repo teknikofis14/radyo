@@ -242,6 +242,18 @@
     const savedTheme = localStorage.getItem('radio-theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
     if(savedTheme === 'dark') document.getElementById('themeBtn').innerHTML = '<i class="fa-solid fa-moon"></i>';
+
+    document.addEventListener('contextmenu', event => event.preventDefault());
+
+    document.onkeydown = function(e) {
+      if (e.ctrlKey && (e.keyCode === 67 || e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 85)) {
+        return false;
+      }
+      if (e.keyCode === 123) { // F12
+        return false;
+      }
+    };
+    
 </script>
 </body>
 </html>
