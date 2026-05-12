@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dijital Yer İmlerim</title>
+    <script src="https://tailwindcss.com"></script>
+    <script defer src="https://unpkg.com"></script>
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
+    <script>
+        // Koyu tema yapılandırması
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
+</head>
+<body x-data="bookmarkApp()" x-init="init()" :class="{ 'dark': darkMode }" class="bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-300">
+    
+    <div class="max-w-5xl mx-auto p-6">
+        <!-- Header & Kontroller -->
+        <header class="mb-10 text-center">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-3xl font-extrabold text-gray-800 dark:text-white">Bookmarks Repo</h1>
+                <button @click="darkMode = !darkMode" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                    <template x-if="!darkMode"><span>🌙 Koyu</span></template>
+                    <template x-if="darkMode"><span>☀️ Açık</span></template>
+                </button>
+            </div>
+
+            <!-- Arama ve Filtreleme Grubu -->
+            <div class="flex flex-col md:flex-row gap-4">
+                <input type="text" x-model="searchQuery" placeholder="Site adı, URL veya açıklama ara..." 
+                       class="flex-1 p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 dark:text-white shadow-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                
+                <select x-model="selectedCategory" class="p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 dark:text-white shadow-sm outline-none">
+                    <option value="">Tüm Kategoriler</option>
+                    <template x-for="cat in categories" :key="cat">
+                        <option :value="cat" x-text="cat"></option>
+                    </template>
+                </select>
+            </div>
+        </header>
+
+        <!-- Liste Alanı -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" x-cloak>
+            <template x-for="item in filteredBookmarks" :key="item.url">
+                <div class="group bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="px-3 py-1 text-xs font-bold rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400" x-text="item.kategori"></span>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-2 leading-tight">
+                        <a :href="item.url" target="_blank" class="hover:text-blue-500 transition" x-text="item.ad"></a>
+                    </h2>
+                    <p class="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-2" x-text="item.aciklama"></p>
+                    <div class="text-xs text-gray-400 dark:text-gray-500 truncate font-mono" x-text="item.url"></div>
+                </div>
+            </template>
+        </div>
+
+        <!-- Boş Durum -->
+        <div x-show="filteredBookmarks.length === 0" class="text-center py-20 text-gray-500">
+            Aradığınız kriterlere uygun yer imi bulunamadı.
+        </div>
+    </div>
+
+    <script>
+        function bookmarkApp() {
+            return {
+                bookmarks: [],
+                searchQuery: '',
+                selectedCategory: '',
+                categories: [],
+                darkMode: window.matchMedia('(prefers-color-scheme: dark)').matches,
+
+                async init() {
+                    const res = await fetch('bookmarks.json');
+                    this.bookmarks = await res.json();
+                    
+                    // Kategorileri otomatik çıkar
+                    this.categories = [...new Set(this.bookmarks.map(b => b.kategori))].sort();
+                },
+
+                get filteredBookmarks() {
+                    return this.bookmarks.filter(b => {
+                        const matchesSearch = 
+                            b.ad.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+                            b.url.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+                            b.aciklama.toLowerCase().includes(this.searchQuery.toLowerCase());
+                        
+                        const matchesCategory = this.selectedCategory === '' || b.kategori === this.selectedCategory;
+                        
+                        return matchesSearch && matchesCategory;
+                    });
+                }
+            }
+        }
+    </script>
+</body>
+</html>

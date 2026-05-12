@@ -1,0 +1,32 @@
+[
+  {
+    "kategori": "Haber",
+    "ad": "Anadolu Ajansı",
+    "url": "http://www.aa.com.tr/tr",
+    "aciklama": "Güncel haberler ve son dakika gelişmeleri."
+  },
+  {
+    "kategori": "İbadet",
+    "ad": "Bolu Namaz Vakitleri",
+    "url": "https://namazvakitleri.diyanet.gov.tr/tr-TR/9315/bolu-icin-namaz-vakti",
+    "aciklama": "Diyanet Bolu vakit çizelgesi."
+  },
+  {
+    "kategori": "Alışveriş",
+    "ad": "Hepsiburada",
+    "url": "https://www.hepsiburada.com/",
+    "aciklama": "Online alışveriş platformu."
+  },
+  {
+    "kategori": "Kişisel Gelişim ve Eğitim",
+    "ad": "Udemy",
+    "url": "https://www.udemy.com/",
+    "aciklama": "Çevrimiçi eğitim kursları."
+  },
+  {
+    "kategori": "İş",
+    "ad": "GitHub",
+    "url": "https://github.com/",
+    "aciklama": "Yazılım geliştirme ve sürüm kontrol platformu."
+  }
+]
