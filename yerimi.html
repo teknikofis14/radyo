@@ -4,19 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dijital Yer İmlerim</title>
-    <script src="https://cdn.jsdelivr.net/npm/tailwindcss/dist/lib.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss/index.min.css" rel="stylesheet">
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs/dist/cdn.min.js"></script>
+    
+    <!-- Doğru Tailwind Play CDN (Tarayıcıda derleme yapar) -->
+    <script src="https://tailwindcss.com"></script>
+    
+    <!-- Alpine.js (jsDelivr üzerinden) -->
+    <script defer src="https://jsdelivr.net"></script>
+
     <style>
         [x-cloak] { display: none !important; }
     </style>
+
     <script>
-        // Koyu tema yapılandırması
-        tailwind.config = {
-            darkMode: 'class'
-        }
+        // Tailwind Yapılandırması (Doğru script yüklendiğinde çalışacaktır)
+        window.addEventListener('DOMContentLoaded', () => {
+            if (typeof tailwind !== 'undefined') {
+                tailwind.config = {
+                    darkMode: 'class'
+                }
+            }
+        });
     </script>
 </head>
+
 <body x-data="bookmarkApp()" x-init="init()" :class="{ 'dark': darkMode }" class="bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-300">
     
     <div class="max-w-5xl mx-auto p-6">
