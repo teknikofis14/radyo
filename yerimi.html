@@ -4,109 +4,195 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dijital Yer İmlerim</title>
-    
-    <!-- Doğru Tailwind Play CDN (Tarayıcıda derleme yapar) -->
-    <script src="https://tailwindcss.com"></script>
-    
-    <!-- Alpine.js (jsDelivr üzerinden) -->
-    <script defer src="https://jsdelivr.net"></script>
-
     <style>
-        [x-cloak] { display: none !important; }
-    </style>
+        /* CSS Değişkenleri ve Temel Ayarlar */
+        :root {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-dim: #64748b;
+            --accent: #4f46e5;
+            --border: #e2e8f0;
+        }
 
-    <script>
-        // Tailwind Yapılandırması (Doğru script yüklendiğinde çalışacaktır)
-        window.addEventListener('DOMContentLoaded', () => {
-            if (typeof tailwind !== 'undefined') {
-                tailwind.config = {
-                    darkMode: 'class'
-                }
-            }
-        });
-    </script>
-</head>
-
-<body x-data="bookmarkApp()" x-init="init()" :class="{ 'dark': darkMode }" class="bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-300">
-    
-    <div class="max-w-5xl mx-auto p-6">
-        <!-- Header & Kontroller -->
-        <header class="mb-10 text-center">
-            <div class="flex justify-between items-center mb-6">
-                <h1 class="text-3xl font-extrabold text-gray-800 dark:text-white">Bookmarks Repo</h1>
-                <button @click="darkMode = !darkMode" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
-                    <template x-if="!darkMode"><span>🌙 Koyu</span></template>
-                    <template x-if="darkMode"><span>☀️ Açık</span></template>
-                </button>
-            </div>
-
-            <!-- Arama ve Filtreleme Grubu -->
-            <div class="flex flex-col md:flex-row gap-4">
-                <input type="text" x-model="searchQuery" placeholder="Site adı, URL veya açıklama ara..." 
-                       class="flex-1 p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 dark:text-white shadow-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                
-                <select x-model="selectedCategory" class="p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 dark:text-white shadow-sm outline-none">
-                    <option value="">Tüm Kategoriler</option>
-                    <template x-for="cat in categories" :key="cat">
-                        <option :value="cat" x-text="cat"></option>
-                    </template>
-                </select>
-            </div>
-        </header>
-
-        <!-- Liste Alanı -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" x-cloak>
-            <template x-for="item in filteredBookmarks" :key="item.url">
-                <div class="group bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                    <div class="flex justify-between items-start mb-3">
-                        <span class="px-3 py-1 text-xs font-bold rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400" x-text="item.kategori"></span>
-                    </div>
-                    <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-2 leading-tight">
-                        <a :href="item.url" target="_blank" class="hover:text-blue-500 transition" x-text="item.ad"></a>
-                    </h2>
-                    <p class="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-2" x-text="item.aciklama"></p>
-                    <div class="text-xs text-gray-400 dark:text-gray-500 truncate font-mono" x-text="item.url"></div>
-                </div>
-            </template>
-        </div>
-
-        <!-- Boş Durum -->
-        <div x-show="filteredBookmarks.length === 0" class="text-center py-20 text-gray-500">
-            Aradığınız kriterlere uygun yer imi bulunamadı.
-        </div>
-    </div>
-
-    <script>
-        function bookmarkApp() {
-            return {
-                bookmarks: [],
-                searchQuery: '',
-                selectedCategory: '',
-                categories: [],
-                darkMode: window.matchMedia('(prefers-color-scheme: dark)').matches,
-
-                async init() {
-                    const res = await fetch('bookmarks.json');
-                    this.bookmarks = await res.json();
-                    
-                    // Kategorileri otomatik çıkar
-                    this.categories = [...new Set(this.bookmarks.map(b => b.kategori))].sort();
-                },
-
-                get filteredBookmarks() {
-                    return this.bookmarks.filter(b => {
-                        const matchesSearch = 
-                            b.ad.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-                            b.url.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-                            b.aciklama.toLowerCase().includes(this.searchQuery.toLowerCase());
-                        
-                        const matchesCategory = this.selectedCategory === '' || b.kategori === this.selectedCategory;
-                        
-                        return matchesSearch && matchesCategory;
-                    });
-                }
+        /* Tarayıcı Koyu Tema Ayarı (Otomatik) */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #0f172a;
+                --card-bg: #1e293b;
+                --text-main: #f1f5f9;
+                --text-dim: #94a3b8;
+                --accent: #818cf8;
+                --border: #334155;
             }
         }
-    </script>
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 2rem;
+            transition: background 0.3s ease;
+        }
+
+        .container { max-width: 1000px; margin: 0 auto; }
+        
+        header { text-align: center; margin-bottom: 2rem; }
+
+        /* Arama ve Filtreleme Paneli */
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        input, select {
+            padding: 0.8rem 1.2rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--card-bg);
+            color: var(--text-main);
+            font-size: 1rem;
+            flex: 1;
+            outline: none;
+        }
+
+        select { flex: 0 0 200px; cursor: pointer; }
+
+        /* Kart Yapısı */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+        }
+
+        .badge {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: var(--accent);
+            background: rgba(79, 70, 229, 0.1);
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            margin-bottom: 0.8rem;
+            align-self: flex-start;
+        }
+
+        .card h2 { margin: 0 0 0.5rem 0; font-size: 1.25rem; }
+        .card a { color: var(--text-main); text-decoration: none; }
+        .card a:hover { color: var(--accent); }
+
+        .card p {
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            line-height: 1.5;
+            margin-bottom: 1rem;
+            flex-grow: 1;
+        }
+
+        .url-text {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            font-family: monospace;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Yer İmlerim</h1>
+    </header>
+
+    <div class="controls">
+        <input type="text" id="searchInp" placeholder="Site, adres veya açıklama ara..." oninput="render()">
+        <select id="catFiltre" onchange="render()">
+            <option value="">Tüm Kategoriler</option>
+        </select>
+    </div>
+
+    <div id="grid" class="grid">
+        <!-- Yer imleri buraya yüklenecek -->
+    </div>
+</div>
+
+<script>
+    let allData = [];
+
+    // Veriyi Çek
+    fetch('bookmarks.json')
+        .then(res => res.json())
+        .then(data => {
+            allData = data;
+            populateCategories();
+            render();
+        })
+        .catch(err => {
+            document.getElementById('grid').innerHTML = "<p>Veri yüklenemedi. 'bookmarks.json' dosyasının aynı klasörde olduğundan emin olun.</p>";
+        });
+
+    function populateCategories() {
+        const cats = [...new Set(allData.map(item => item.kategori))].sort();
+        const select = document.getElementById('catFiltre');
+        cats.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c;
+            opt.textContent = c;
+            select.appendChild(opt);
+        });
+    }
+
+    function render() {
+        const query = document.getElementById('searchInp').value.toLowerCase();
+        const cat = document.getElementById('catFiltre').value;
+        const grid = document.getElementById('grid');
+        
+        grid.innerHTML = '';
+
+        const filtered = allData.filter(item => {
+            const matchSearch = item.ad.toLowerCase().includes(query) || 
+                               item.url.toLowerCase().includes(query) || 
+                               item.aciklama.toLowerCase().includes(query);
+            const matchCat = cat === '' || item.kategori === cat;
+            return matchSearch && matchCat;
+        });
+
+        filtered.forEach(item => {
+            const html = `
+                <div class="card">
+                    <span class="badge">${item.kategori}</span>
+                    <h2><a href="${item.url}" target="_blank">${item.ad}</a></h2>
+                    <p>${item.aciklama}</p>
+                    <div class="url-text">${item.url}</div>
+                </div>
+            `;
+            grid.insertAdjacentHTML('beforeend', html);
+        });
+    }
+</script>
+
 </body>
 </html>
